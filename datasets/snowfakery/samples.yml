@@ -1,0 +1,316 @@
+# Instructions
+# -------------
+# 1) To locally test the data that this mapping would generate without actually loading it into Salesforce, run the following command:
+#    snowfakery datasets/snowfakery/samples.yml --plugin-option org_name dev --output-format csv --output-folder datasets/opptys/csvfiles --target-number 10 SBQQ__Quote__c
+# 2) To actually load this data into Salesforce, run the following command to create 50 sample opptys:
+#    cci task run generate_and_load_from_yaml -o generator_yaml datasets/snowfakery/samples.yml -o num_records 50 -o num_records_tablename Opportunity -o batch_size 25 --org dev
+# 3) If there was a mistake and you need to quickly delete records from the org, do the following:
+#    cci task run delete_data -o objects Account,Opportunity -o ignore_row_errors True --org dev
+- plugin: snowfakery.standard_plugins.Salesforce.SalesforceQuery
+
+- var: customPricebook
+  value:
+    SalesforceQuery.find_record:
+      from: Pricebook2
+      where: IsStandard = false And IsActive = true
+
+- object: Account
+  fields:
+    Name:
+      fake: Company
+    Type:
+      random_choice:
+        - Prospect
+        - Customer - Direct
+        - Customer - Channel
+        - Channel Partner / Reseller
+        - Installation Partner
+        - Technology Partner
+        - Other
+    BillingStreet:
+      fake: StreetAddress
+    BillingCity:
+      fake: city
+    BillingState:
+      fake: state
+    BillingPostalCode:
+      fake: postalcode
+    BillingCountry:
+      fake: country
+    BillingLatitude:
+      fake: latitude
+    BillingLongitude:
+      fake: longitude
+    BillingGeocodeAccuracy:
+      random_choice:
+        - Address
+        - NearAddress
+        - Block
+        - Street
+        - ExtendedZip
+        - Zip
+        - Neighborhood
+        - City
+        - County
+        - State
+        - Unknown
+    ShippingStreet: ${{BillingStreet}}
+    ShippingCity: ${{BillingCity}}
+    ShippingState: ${{BillingState}}
+    ShippingPostalCode: ${{BillingPostalCode}}
+    ShippingCountry: ${{BillingCountry}}
+    ShippingLatitude:
+      fake: latitude
+    ShippingLongitude:
+      fake: longitude
+    ShippingGeocodeAccuracy:
+      random_choice:
+        - Address
+        - NearAddress
+        - Block
+        - Street
+        - ExtendedZip
+        - Zip
+        - Neighborhood
+        - City
+        - County
+        - State
+        - Unknown
+    Phone:
+      fake: phone_number
+    Fax:
+      fake: phone_number
+    AccountNumber: ${{fake.Aba}}
+    Website:
+      fake: url
+    Sic:
+      fake: postalcode
+    Industry:
+      random_choice:
+        - Agriculture
+        - Apparel
+        - Banking
+        - Biotechnology
+        - Chemicals
+        - Communications
+        - Construction
+        - Consulting
+        - Education
+        - Electronics
+        - Energy
+        - Engineering
+        - Entertainment
+        - Environmental
+        - Finance
+        - Food & Beverage
+        - Government
+        - Healthcare
+        - Hospitality
+        - Insurance
+        - Machinery
+        - Manufacturing
+        - Media
+        - Not For Profit
+        - Recreation
+        - Retail
+        - Shipping
+        - Technology
+        - Telecommunications
+        - Transportation
+        - Utilities
+        - Other
+    AnnualRevenue:
+      random_number:
+        min: 1
+        max: 100000
+    NumberOfEmployees:
+      random_number:
+        min: 1
+        max: 100000
+    Ownership:
+      random_choice:
+        - Public
+        - Private
+        - Subsidiary
+        - Other
+    Description:
+      fake: CatchPhrase
+    Rating:
+      random_choice:
+        - Hot
+        - Warm
+        - Cold
+    Site: Single location
+    CleanStatus:
+      random_choice:
+        - Matched
+        - Different
+        - Acknowledged
+        - NotFound
+        - Inactive
+        - Pending
+        - Skipped
+    AccountSource:
+      random_choice:
+        - Web
+        - Phone Inquiry
+        - Partner Referral
+        - Purchased List
+        - Other
+    DunsNumber:
+      fake.text:
+        max_nb_chars: 9
+    Tradestyle:
+      fake.text:
+        max_nb_chars: 100
+    NaicsCode:
+      fake: postalcode
+    NaicsDesc:
+      fake.text:
+        max_nb_chars: 100
+    YearStarted:
+      fake: year
+    SicDesc:
+      fake.text:
+        max_nb_chars: 80
+    SBQQ__ContractCoTermination__c: Always
+    SBQQ__PreserveBundle__c: True
+    SBQQ__RenewalPricingMethod__c: Uplift
+
+- object: Opportunity
+  fields:
+    AccountId:
+      reference: Account
+    Name: Test Opportunity
+    Description: Sample record automatically created by Snowfakery recipe.
+    CloseDate:
+      date_between:
+        start_date: 1m
+        end_date: 3m
+    StageName:
+      random_choice:
+        - Prospecting
+        - Qualification
+        - Needs Analysis
+        - Value Proposition
+        - Id. Decision Makers
+        - Perception Analysis
+        - Proposal/Price Quote
+        - Negotiation/Review
+    Pricebook2Id: ${{customPricebook}}
+    SBQQ__QuotePricebookId__c: ${{customPricebook}}
+
+- object: SBQQ__Quote__c
+  fields:
+    SBQQ__Account__c:
+      reference: Account
+    SBQQ__Opportunity2__c:
+      reference: Opportunity
+    SBQQ__Primary__c: True
+    SBQQ__BillingCity__c: ${{SBQQ__Account__c.BillingCity}}
+    SBQQ__BillingCountry__c: ${{SBQQ__Account__c.BillingCountry}}
+    SBQQ__BillingName__c:
+      fake: name
+    SBQQ__BillingPostalCode__c: ${{SBQQ__Account__c.BillingPostalCode}}
+    SBQQ__BillingState__c: ${{SBQQ__Account__c.BillingState}}
+    SBQQ__BillingStreet__c: ${{SBQQ__Account__c.BillingStreet}}
+    SBQQ__ShippingCity__c: ${{SBQQ__Account__c.ShippingCity}}
+    SBQQ__ShippingCountry__c: ${{SBQQ__Account__c.ShippingCountry}}
+    SBQQ__ShippingName__c: ${{SBQQ__ShippingName__c}}
+    SBQQ__ShippingPostalCode__c: ${{SBQQ__Account__c.ShippingPostalCode}}
+    SBQQ__ShippingState__c: ${{SBQQ__Account__c.ShippingState}}
+    SBQQ__ShippingStreet__c: ${{SBQQ__Account__c.ShippingStreet}}
+    SBQQ__Notes__c: Sample record automatically created by Snowfakery recipe.
+    SBQQ__PriceBook__c: ${{customPricebook}}
+    SBQQ__PricebookId__c: ${{customPricebook}}
+    SBQQ__StartDate__c:
+      random_choice:
+        - choice:
+            # About a quarter of the time, I would like to ensure the start date begins on a leap year
+            probability: 5%
+            pick:
+              random_choice:
+                - choice:
+                    probability: 25%
+                    pick:
+                      date_between:
+                        start_date: 2024-01-01
+                        end_date: 2024-12-31
+                - choice:
+                    probability: 25%
+                    pick:
+                      date_between:
+                        start_date: 2024-02-01
+                        end_date: 2024-02-29
+                - choice:
+                    probability: 25%
+                    pick:
+                      date_between:
+                        start_date: 2028-01-01
+                        end_date: 2028-12-31
+                - choice:
+                    probability: 25%
+                    pick:
+                      date_between:
+                        start_date: 2032-01-01
+                        end_date: 2032-03-31
+        - choice:
+            # About a half of the time, I would like to ensure the start date is in this year
+            probability: 75%
+            pick:
+              date_between:
+                start_date: 2022-04-01
+                end_date: 2022-12-31
+        - choice:
+            # The remainder of the time, I'll give it more flexibility to choose other dates
+            probability: 20%
+            pick:
+              date_between:
+                start_date: 2022-01-01
+                end_date: 2029-12-31
+    SBQQ__EndDate__c:
+      random_choice:
+          - choice:
+              probability: 25%
+              pick:
+                # Set "End Date" = NULL
+                NULL
+          - choice:
+              probability: 25%
+              # Set "End Date" to represent a 3 year term
+              pick: ${{ date(SBQQ__StartDate__c) + relativedelta(years=3) - relativedelta(days=1)}}
+          - choice:
+              probability: 25%
+              # Set "End Date" to represent a 1 year term
+              pick: ${{ date(SBQQ__StartDate__c) + relativedelta(years=1) - relativedelta(days=1)}}
+          - choice:
+              probability: 25%
+              # Set "End Date" to any value within 5 years
+              pick:
+                date_between:
+                  start_date: ${{SBQQ__StartDate__c}}
+                  end_date: +5y
+    SBQQ__SubscriptionTerm__c:
+      if:
+        - choice:
+            # In lieu of using an "End Date", sometimes use a Subscription Term
+            when: ${{SBQQ__EndDate__c==NULL}}
+            pick:
+              random_choice:
+                - choice:
+                    probability: 25%
+                    pick: 12
+                - choice:
+                    probability: 25%
+                    pick: 1
+                - choice:
+                    probability: 25%
+                    pick: 36
+                - choice:
+                    probability: 25%
+                    pick:
+                      random_number:
+                        min: 2
+                        max: 24
+        - choice:
+            pick: NULL
