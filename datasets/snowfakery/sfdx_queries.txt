@@ -1,1 +1,2 @@
 sfdx force:data:soql:query -q "SELECT FIELDS(ALL) FROM SBQQ__Quote__c LIMIT 200" -r csv > quotes.csv
+sfdx force:data:soql:query -q "SELECT FIELDS(ALL) FROM SBQQ__QuoteLine__c  LIMIT 200" -r csv > quoteLines.csv
